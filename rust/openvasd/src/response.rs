@@ -201,6 +201,18 @@ impl Response {
         self.empty(hyper::StatusCode::UNAUTHORIZED)
     }
 
+    pub fn conflict<'a>(&self, class: &'a str, id: &'a str) -> Result {
+        #[derive(Serialize, Debug)]
+        struct Conflict<'a> {
+            class: &'a str,
+            id: &'a str,
+        }
+
+        let value = Conflict { class, id };
+        tracing::trace!("{:?}", value);
+        self.create(hyper::StatusCode::CONFLICT, &value)
+    }
+
     pub fn internal_server_error(&self, err: &dyn Error) -> Result {
         tracing::error!("Unexpected error: {}", err);
         self.empty(hyper::StatusCode::INTERNAL_SERVER_ERROR)

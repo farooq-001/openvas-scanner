@@ -146,6 +146,19 @@ where
                         }
                         let mut scans = ctx.scans.write()?;
                         let id = scan.scan_id.clone().unwrap_or_default();
+
+                        // Check if the scan already exist and if it is possible
+                        // to override it. It is only allowed if it is in stored stauts
+                        if scans.get(&id).is_some() {
+                            if let Some(progress) = scans.get(&id) {
+                                if !progress.status.is_stored() {
+                                    let resp = ctx.response.conflict("scans", &id);
+                                    tracing::debug!("Scan with ID {} already in storage", id);
+                                    return Ok(resp);
+                                }
+                            }
+                        }
+
                         let resp = ctx.response.created(&id);
                         scans.insert(id.clone(), crate::scan::Progress::from(scan));
                         tracing::debug!("Scan with ID {} created", id);
@@ -287,7 +300,6 @@ where
             let res = match scans.get(&id) {
                 Some(prgss) => &prgss.results,
                 None => return Ok(ctx.response.not_found("scans", &id)),
-
             };
             Ok(ctx.response.ok_stream(res.to_vec()).await)
         }
