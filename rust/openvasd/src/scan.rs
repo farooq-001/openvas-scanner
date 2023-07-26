@@ -147,6 +147,13 @@ impl Progress {
             None => "",
         }
     }
+
+    pub fn hide_credentials(&mut self) {
+        for (i, credential) in self.scan.target.credentials.clone().iter_mut().enumerate() {
+            self.scan.target.credentials[i].credential_type =
+                credential.clone().credential_type.hide_sensitive_data();
+        }
+    }
 }
 
 impl From<models::Scan> for Progress {

@@ -103,3 +103,31 @@ impl AsRef<str> for CredentialType {
         }
     }
 }
+
+impl CredentialType {
+    /// Replace all sensitive data related to credentials with asterisks.
+    /// It is intended to be used before print/debug the credentials setup to
+    /// prevent showing them.
+    /// Consider to clone the credentials before using this method, for further credentials usage.
+    pub fn hide_sensitive_data (&mut self) -> Self {
+        match self {
+            CredentialType::UP {username: _, password: _ } =>
+                CredentialType::UP { username: "*".to_owned(), password: "*".to_owned() },
+            CredentialType::USK { username: _, password: _, private_key: _ } =>
+                CredentialType::USK {
+                    username: "*".to_owned(),
+                    password: "*".to_owned(),
+                    private_key: "*".to_owned()
+                },
+            CredentialType::SNMP {
+                username: _,
+                password: _,
+                community: _,
+                auth_algorithm: _,
+                privacy_password: _,
+                privacy_algorithm: _
+            } =>
+                CredentialType::SNMP { username: "*".to_owned(), password: "*".to_owned(), community: "*".to_owned(), auth_algorithm: "*".to_owned(), privacy_password: "*".to_owned(), privacy_algorithm: "*".to_owned() }
+        }
+    }
+}

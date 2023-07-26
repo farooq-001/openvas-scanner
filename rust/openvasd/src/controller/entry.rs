@@ -250,7 +250,13 @@ where
             response_blocking(move || {
                 let scans = ctx.scans.read()?;
                 match scans.get(&id) {
-                    Some(prgrs) => Ok(ctx.response.ok(&prgrs.scan)),
+                    Some(prgrs) => {
+                        // Clone the scan to remove sensitive data before
+                        // sending it back into the response
+                        let mut prgrs_aux = prgrs.clone();
+                        prgrs_aux.hide_credentials();
+                        Ok(ctx.response.ok(&prgrs_aux.scan))
+                    }
                     None => Ok(ctx.response.not_found("scans", &id)),
                 }
             })
@@ -287,7 +293,6 @@ where
             let res = match scans.get(&id) {
                 Some(prgss) => &prgss.results,
                 None => return Ok(ctx.response.not_found("scans", &id)),
-
             };
             Ok(ctx.response.ok_stream(res.to_vec()).await)
         }
