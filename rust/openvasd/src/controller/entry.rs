@@ -121,6 +121,10 @@ where
     use KnownPaths::*;
     let kp = KnownPaths::from_path(req.uri().path());
     tracing::debug!("{} {}", req.method(), kp);
+    // on head requests we just return an empty response withouth checking the api key
+    if req.method() == Method::HEAD {
+        return Ok(ctx.response.empty(hyper::StatusCode::OK));
+    }
     if let Some(key) = ctx.api_key.as_ref() {
         match req.headers().get("x-api-key") {
             Some(v) if v == key => {}
@@ -136,7 +140,6 @@ where
     }
 
     match (req.method(), kp) {
-        (&Method::HEAD, _) => Ok(ctx.response.empty(hyper::StatusCode::OK)),
         (&Method::POST, Scans(None)) => {
             match crate::request::json_request::<models::Scan>(&ctx.response, req).await {
                 Ok(mut scan) => {
@@ -287,7 +290,6 @@ where
             let res = match scans.get(&id) {
                 Some(prgss) => &prgss.results,
                 None => return Ok(ctx.response.not_found("scans", &id)),
-
             };
             Ok(ctx.response.ok_stream(res.to_vec()).await)
         }
