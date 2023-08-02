@@ -14,6 +14,7 @@ members = [
   "nasl-syntax",
   "nasl-interpreter",
   "nasl-cli",
+  "nasl-c-lib",
   "storage",
   "redis-storage",
   "json-storage",
